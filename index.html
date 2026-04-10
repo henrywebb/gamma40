@@ -754,21 +754,27 @@ function stopAudio() {
 
 // ═══════════════════════════════════════════════════════
 //  FLASH ENGINE — frequency controlled by currentFlashFreq
+//  Uses AudioContext.currentTime as clock source for precision sync.
+//  At 60 Hz on a 120 Hz display: 2 frames per cycle — tight but reliable.
+//  At 40 Hz on a 60 Hz display: 1.5 frames per cycle — audio clock interpolates correctly.
 // ═══════════════════════════════════════════════════════
 const flashEl = document.getElementById('flash');
 
 function startFlash(ctx) {
-  let lastOn = null;
-  (function frame() {
-    if (!audioCtx) return;
-    // Use currentFlashFreq which is updated during alpha sweep
-    const on = (ctx.currentTime * currentFlashFreq % 1) < 0.5;
-    if (on !== lastOn) {
-      flashEl.style.opacity = on ? '1' : '0';
-      lastOn = on;
-    }
-    requestAnimationFrame(frame);
-  })();
+  // Wait one frame before starting to ensure AudioContext clock is running
+  requestAnimationFrame(() => {
+    let lastOn = null;
+    (function frame() {
+      if (!audioCtx) return;
+      const phase = (ctx.currentTime * currentFlashFreq) % 1;
+      const on = phase < 0.5;
+      if (on !== lastOn) {
+        flashEl.style.opacity = on ? '1' : '0';
+        lastOn = on;
+      }
+      requestAnimationFrame(frame);
+    })();
+  });
 }
 
 // ═══════════════════════════════════════════════════════
@@ -882,7 +888,7 @@ async function startSession() {
     alphaOscR = null;
   } else if (isBeta) {
     audioResult = createBetaAudio();
-    currentFlashFreq = 60;
+    currentFlashFreq = 60; // true 60 Hz — reliable on 120 Hz display (OnePlus 12)
     alphaOscR = null;
   } else {
     audioResult = createGammaAudio(audioMode);
