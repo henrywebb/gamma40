@@ -14,7 +14,6 @@
   --bg:#000; --text:#e8e0d0; --accent:#c8a96e; --dim:#5a5040;
   --alpha-accent:#7a9eb5; --alpha-dim:#3a5060;
   --theta-accent:#9b7eb5; --theta-dim:#4a3860;
-  --beta-accent:#7eb58a; --beta-dim:#3a6045;
 }
 body {
   background:var(--bg); color:var(--text);
@@ -28,36 +27,31 @@ body {
 #flash {
   position:fixed; inset:0; background:#fff;
   opacity:0; pointer-events:none; z-index:100; transition:none;
-  animation:none;
 }
-/* CSS-driven flicker animations — compositor thread, not JS, no jitter */
-@keyframes flicker-60 {
-  0%,49.9%  { opacity:1; }
-  50%,100%  { opacity:0; }
+/* CSS-driven flicker — compositor thread, steps(2,start) = true hard square wave */
+@keyframes flicker {
+  0%   { opacity:1; }
+  50%  { opacity:0; }
 }
-@keyframes flicker-40 {
-  0%,49.9%  { opacity:1; }
-  50%,100%  { opacity:0; }
-}
-@keyframes flicker-10 {
-  0%,49.9%  { opacity:1; }
-  50%,100%  { opacity:0; }
-}
-@keyframes flicker-6 {
-  0%,49.9%  { opacity:1; }
-  50%,100%  { opacity:0; }
-}
-@keyframes flicker-3 {
-  0%,49.9%  { opacity:1; }
-  50%,100%  { opacity:0; }
-}
-#flash.flicker-60 { animation: flicker-60 16.667ms steps(1,end) infinite; }
-#flash.flicker-40 { animation: flicker-40 25ms steps(1,end) infinite; }
-#flash.flicker-10 { animation: flicker-10 100ms steps(1,end) infinite; }
-#flash.flicker-6  { animation: flicker-6  166.667ms steps(1,end) infinite; }
-#flash.flicker-3  { animation: flicker-3  333.333ms steps(1,end) infinite; }
+#flash.flicker-40 { animation: flicker 25ms      steps(2,start) infinite; }
+#flash.flicker-10 { animation: flicker 100ms     steps(2,start) infinite; }
+#flash.flicker-6  { animation: flicker 166.667ms steps(2,start) infinite; }
+#flash.flicker-3  { animation: flicker 333.333ms steps(2,start) infinite; }
 
-/* ── SCREENS ── */
+/* ── FIXATION CROSS — Gamma only ──
+   Sits above the flash overlay. Uses mix-blend-mode:difference so it
+   appears BLACK on the white flash and WHITE on the black background.
+   This keeps it visible throughout the full 40Hz flicker cycle.
+   Research: active visual attention task deepens hippocampal gamma entrainment. */
+#fixation {
+  position:fixed; inset:0; pointer-events:none; z-index:101;
+  display:none; align-items:center; justify-content:center;
+}
+#fixation.active { display:flex; }
+#fixation svg {
+  width:40px; height:40px;
+  mix-blend-mode:difference;
+}
 .screen {
   display:none; flex-direction:column; align-items:center; justify-content:center;
   width:100%; height:100%; padding:2rem; text-align:center; gap:1.6rem; overflow-y:auto;
@@ -96,15 +90,12 @@ body {
 .mode-card.gamma .card-title { color:var(--accent); }
 .mode-card.alpha .card-title { color:var(--alpha-accent); }
 .mode-card.theta .card-title { color:var(--theta-accent); }
-.mode-card.beta .card-title { color:var(--beta-accent); }
 .card-hz { font-size:0.55rem; letter-spacing:0.12em; color:var(--dim); text-transform:uppercase; }
 .mode-card.alpha .card-hz { color:var(--alpha-dim); }
 .mode-card.theta .card-hz { color:var(--theta-dim); }
-.mode-card.beta .card-hz { color:var(--beta-dim); }
 .card-desc { font-size:0.54rem; line-height:1.55; letter-spacing:0.02em; color:#4a4030; max-width:90px; }
 .mode-card.alpha .card-desc { color:#2a4050; }
 .mode-card.theta .card-desc { color:#3a2850; }
-.mode-card.beta .card-desc { color:#2a4030; }
 
 .warning-small { font-size:0.55rem; color:#2a2018; letter-spacing:0.05em; line-height:1.6; max-width:280px; }
 
@@ -141,8 +132,6 @@ body {
 .begin-btn.alpha-begin:active { background:var(--alpha-accent); color:var(--bg); }
 .begin-btn.theta-begin { border-color:var(--theta-accent); color:var(--theta-accent); }
 .begin-btn.theta-begin:active { background:var(--theta-accent); color:var(--bg); }
-.begin-btn.beta-begin { border-color:var(--beta-accent); color:var(--beta-accent); }
-.begin-btn.beta-begin:active { background:var(--beta-accent); color:var(--bg); }
 
 /* ── ALPHA CONFIG SCREEN ── */
 #screen-alpha-cfg { background:var(--bg); }
@@ -179,7 +168,6 @@ body {
 #ring-progress { stroke:var(--accent); stroke-linecap:round; transition:stroke-dashoffset 1s linear; }
 #ring-progress.alpha-ring { stroke:var(--alpha-accent); }
 #ring-progress.theta-ring { stroke:var(--theta-accent); }
-#ring-progress.beta-ring { stroke:var(--beta-accent); }
 .timer-center {
   position:absolute; inset:0; display:flex; flex-direction:column;
   align-items:center; justify-content:center;
@@ -190,7 +178,6 @@ body {
 #hz-pulse { font-size:0.75rem; letter-spacing:0.15em; color:var(--accent); animation:pulse-text 1s ease-in-out infinite; }
 #hz-pulse.alpha-pulse { color:var(--alpha-accent); animation:pulse-text 1s ease-in-out infinite; }
 #hz-pulse.theta-pulse { color:var(--theta-accent); animation:pulse-text 1s ease-in-out infinite; }
-#hz-pulse.beta-pulse { color:var(--beta-accent); animation:pulse-text 1s ease-in-out infinite; }
 @keyframes pulse-text { 0%,100%{opacity:0.5} 50%{opacity:1} }
 #sweep-label { font-size:0.6rem; letter-spacing:0.15em; color:#7a9eb5; text-transform:uppercase; }
 .stop-btn {
@@ -206,11 +193,9 @@ body {
 .done-mark { font-size:2.2rem; color:var(--accent); }
 .done-mark.alpha-mark { color:var(--alpha-accent); }
 .done-mark.theta-mark { color:var(--theta-accent); }
-.done-mark.beta-mark { color:var(--beta-accent); }
 .done-title { font-size:0.95rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--accent); }
 .done-title.alpha-done-title { color:var(--alpha-accent); }
 .done-title.theta-done-title { color:var(--theta-accent); }
-.done-title.beta-done-title { color:var(--beta-accent); }
 .done-text { font-size:0.72rem; color:var(--dim); line-height:1.8; letter-spacing:0.04em; max-width:280px; font-style:italic; }
 .again-btn {
   background:transparent; border:1px solid var(--dim); color:var(--dim);
@@ -235,6 +220,14 @@ body {
 
 <div id="flash"></div>
 
+<!-- Fixation cross — Gamma mode only. mix-blend-mode:difference keeps it visible on both white flash and black bg -->
+<div id="fixation">
+  <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="17" y="4" width="6" height="32" fill="white"/>
+    <rect x="4" y="17" width="32" height="6" fill="white"/>
+  </svg>
+</div>
+
 <!-- ══ MODE SELECT ══ -->
 <div id="screen-mode" class="screen active">
   <div class="sigil">
@@ -256,30 +249,24 @@ body {
   <div>
     <div class="app-title">Resonance</div>
   </div>
-  <div class="mode-cards" style="flex-wrap:wrap; max-width:300px; gap:0.6rem;">
-    <button class="mode-card gamma" id="btn-mode-gamma" style="flex:0 0 calc(50% - 0.3rem)">
+  <div class="mode-cards">
+    <button class="mode-card gamma" id="btn-mode-gamma">
       <div class="card-icon">◉</div>
       <div class="card-title">Gamma</div>
       <div class="card-hz">40 Hz</div>
       <div class="card-desc">Cognitive clarity · memory · AD prevention</div>
     </button>
-    <button class="mode-card theta" id="btn-mode-theta" style="flex:0 0 calc(50% - 0.3rem)">
+    <button class="mode-card theta" id="btn-mode-theta">
       <div class="card-icon">◈</div>
       <div class="card-title">Theta</div>
       <div class="card-hz">6 Hz</div>
       <div class="card-desc">Stress relief · anxiety · parasympathetic</div>
     </button>
-    <button class="mode-card alpha" id="btn-mode-alpha" style="flex:0 0 calc(50% - 0.3rem)">
+    <button class="mode-card alpha" id="btn-mode-alpha">
       <div class="card-icon">◌</div>
       <div class="card-title">Alpha</div>
       <div class="card-hz">10 → 3 Hz</div>
       <div class="card-desc">Deep relaxation · sleep induction · restoration</div>
-    </button>
-    <button class="mode-card beta" id="btn-mode-beta" style="flex:0 0 calc(50% - 0.3rem)">
-      <div class="card-icon">◍</div>
-      <div class="card-title">Beta</div>
-      <div class="card-hz">60 Hz</div>
-      <div class="card-desc">Depression · neuroplasticity · PNN remodeling</div>
     </button>
   </div>
   <div class="warning-small">⚠ Not for epilepsy or photosensitivity · Earbuds required for binaural modes</div>
@@ -361,27 +348,6 @@ body {
   <button class="begin-btn alpha-begin" id="btn-start-alpha">Begin Session</button>
 </div>
 
-<!-- ══ BETA CONFIG ══ -->
-<div id="screen-beta-cfg" class="screen">
-  <button class="cfg-back" id="back-beta">← Back</button>
-  <div class="cfg-title" style="color:var(--beta-accent)">Beta · Depression</div>
-  <div class="alpha-info" style="color:var(--beta-dim)">
-    <span style="color:#9ed0aa">60 Hz</span> light flicker — the only frequency shown to dissolve perineuronal nets (PNNs) via microglia, reinstating juvenile-like neuroplasticity.<br><br>
-    Mechanism mirrors <span style="color:#9ed0aa">ketamine</span> antidepressant effect — non-pharmacological.<br>
-    Clinical trials underway at NYU Langone &amp; São Paulo.<br><br>
-    <span style="color:#9ed0aa">30 min/day · 5 days/week · 3 weeks</span> is the studied protocol. Eyes open preferred.
-  </div>
-  <div>
-    <div class="dur-label" style="color:var(--beta-dim)">Duration</div>
-    <div class="dur-row" style="margin-top:0.6rem">
-      <button class="dur-btn beta-dur selected" data-min="15">15 min</button>
-      <button class="dur-btn beta-dur" data-min="30">30 min</button>
-      <button class="dur-btn beta-dur" data-min="60">60 min</button>
-    </div>
-  </div>
-  <button class="begin-btn beta-begin" id="btn-start-beta">Begin Session</button>
-</div>
-
 <!-- ══ SESSION ══ -->
 <div id="screen-session" class="screen">
   <div id="session-overlay">
@@ -400,7 +366,6 @@ body {
       </div>
       <div id="hz-pulse">● 40 Hz active</div>
       <div id="sweep-label" style="display:none"></div>
-      <div id="fps-warn" style="display:none; font-size:0.55rem; letter-spacing:0.08em; color:#e08060; text-align:center; max-width:220px; line-height:1.6;">⚠ Display running at 60 Hz — Beta flicker may be irregular. Enable 120 Hz in phone display settings.</div>
       <button class="stop-btn" id="btn-stop">End Session</button>
     </div>
   </div>
@@ -468,12 +433,11 @@ injectManifest(); registerSW();
 // ═══════════════════════════════════════════════════════
 //  STATE
 // ═══════════════════════════════════════════════════════
-let appMode = 'gamma';          // 'gamma' | 'alpha' | 'theta' | 'beta'
+let appMode = 'gamma';          // 'gamma' | 'alpha' | 'theta'
 let durationMin = 30;
 let audioMode = 'click';
 let alphaDurationMin = 20;
 let thetaDurationMin = 10;
-let betaDurationMin = 30;
 let audioCtx = null;
 let sessionNodes = [];
 let scriptNode = null;          // for non-looping pink noise
@@ -489,16 +453,14 @@ let currentFlashFreq = 40;      // updated during alpha sweep
 document.getElementById('btn-mode-gamma').addEventListener('click', () => showScreen('gamma-cfg'));
 document.getElementById('btn-mode-theta').addEventListener('click', () => showScreen('theta-cfg'));
 document.getElementById('btn-mode-alpha').addEventListener('click', () => showScreen('alpha-cfg'));
-document.getElementById('btn-mode-beta').addEventListener('click', () => showScreen('beta-cfg'));
 document.getElementById('back-gamma').addEventListener('click', () => showScreen('mode'));
 document.getElementById('back-theta').addEventListener('click', () => showScreen('mode'));
 document.getElementById('back-alpha').addEventListener('click', () => showScreen('mode'));
-document.getElementById('back-beta').addEventListener('click', () => showScreen('mode'));
 
 // Gamma duration
-document.querySelectorAll('.dur-btn:not(.alpha-dur):not(.theta-dur):not(.beta-dur)').forEach(btn => {
+document.querySelectorAll('.dur-btn:not(.alpha-dur):not(.theta-dur)').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.dur-btn:not(.alpha-dur):not(.theta-dur):not(.beta-dur)').forEach(b=>b.classList.remove('selected'));
+    document.querySelectorAll('.dur-btn:not(.alpha-dur):not(.theta-dur)').forEach(b=>b.classList.remove('selected'));
     btn.classList.add('selected');
     durationMin = parseInt(btn.dataset.min);
   });
@@ -519,14 +481,6 @@ document.querySelectorAll('.theta-dur').forEach(btn => {
     thetaDurationMin = parseInt(btn.dataset.min);
   });
 });
-// Beta duration
-document.querySelectorAll('.beta-dur').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.beta-dur').forEach(b=>b.classList.remove('selected'));
-    btn.classList.add('selected');
-    betaDurationMin = parseInt(btn.dataset.min);
-  });
-});
 // Audio mode
 document.querySelectorAll('.audio-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -539,7 +493,6 @@ document.querySelectorAll('.audio-btn').forEach(btn => {
 document.getElementById('btn-start-gamma').addEventListener('click', () => { appMode='gamma'; startSession(); });
 document.getElementById('btn-start-theta').addEventListener('click', () => { appMode='theta'; startSession(); });
 document.getElementById('btn-start-alpha').addEventListener('click', () => { appMode='alpha'; startSession(); });
-document.getElementById('btn-start-beta').addEventListener('click', () => { appMode='beta'; startSession(); });
 document.getElementById('btn-stop').addEventListener('click', stopSession);
 document.getElementById('btn-again').addEventListener('click', () => showScreen('mode'));
 
@@ -592,25 +545,23 @@ function createGammaAudio(mode) {
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
   const nodes = [];
   const master = ctx.createGain(); master.gain.value = 0.7; master.connect(ctx.destination);
+  const startTime = ctx.currentTime + SYNC_DELAY; // scheduled start for phase lock
 
   if (mode === 'click' || mode === 'both') {
     const { sp, g: noiseGain } = createContinuousPinkNoise(ctx, mode==='both' ? 0.55 : 0.8);
-
-    // 40 Hz square LFO — started at ctx.currentTime so phase matches flash engine
-    // DC offset 0.5 so LFO swings gain cleanly 0.0 → 1.0
+    // Square LFO at 40 Hz — scheduled to start at same reference as CSS animation
     const lfo = ctx.createOscillator(); lfo.type='square'; lfo.frequency.value=40;
     const lfoGain = ctx.createGain(); lfoGain.gain.value = 0.5;
-    noiseGain.gain.value = 0.5;
+    noiseGain.gain.value = 0.5; // DC offset: LFO swings gain 0→1
     lfo.connect(lfoGain); lfoGain.connect(noiseGain.gain);
     noiseGain.connect(master);
-    lfo.start();
+    lfo.start(startTime); // phase-locked: starts exactly when CSS animation phase = 0
     nodes.push(lfo, sp, noiseGain, lfoGain);
     scriptNode = sp;
   }
 
   if (mode === 'binaural' || mode === 'both') {
     const mg = ctx.createChannelMerger(2);
-    // Carrier: 340 Hz L / 380 Hz R = 40 Hz binaural beat
     const oL = ctx.createOscillator(); oL.type='sine'; oL.frequency.value=340;
     const gL = ctx.createGain(); gL.gain.value = mode==='both'?0.25:0.4;
     oL.connect(gL); gL.connect(mg,0,0);
@@ -618,23 +569,20 @@ function createGammaAudio(mode) {
     const gR = ctx.createGain(); gR.gain.value = mode==='both'?0.25:0.4;
     oR.connect(gR); gR.connect(mg,0,1);
     const bG = ctx.createGain();
-    bG.gain.setValueAtTime(0, ctx.currentTime);
-    bG.gain.linearRampToValueAtTime(1, ctx.currentTime+3);
+    bG.gain.setValueAtTime(0, startTime);
+    bG.gain.linearRampToValueAtTime(1, startTime + 0.5);
     mg.connect(bG); bG.connect(master);
-    oL.start(); oR.start();
+    oL.start(startTime); oR.start(startTime);
     nodes.push(oL,oR,gL,gR,mg,bG);
   }
-  return { ctx, nodes };
+  return { ctx, nodes, startTime };
 }
 
 function createAlphaAudio() {
-  // Alpha mode: binaural beats sweeping 10→6→3 Hz for sleep descent
-  // Carrier: 250 Hz (warmer, less harsh than 200 Hz for extended sleep sessions)
-  // Right osc starts at 260 Hz (250 + 10 Hz beat), sweeps down with each stage
-  // Pink noise bed very quiet — just enough to mask carrier tone edges
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
   const nodes = [];
   const master = ctx.createGain(); master.gain.value = 0.55; master.connect(ctx.destination);
+  const startTime = ctx.currentTime + SYNC_DELAY;
 
   const { sp, g: bgGain } = createContinuousPinkNoise(ctx, 0.04);
   bgGain.connect(master);
@@ -642,140 +590,75 @@ function createAlphaAudio() {
   scriptNode = sp;
 
   const mg = ctx.createChannelMerger(2);
-
-  // Left: 250 Hz carrier (fixed)
   const oL = ctx.createOscillator(); oL.type='sine'; oL.frequency.value=250;
   const gL = ctx.createGain(); gL.gain.value=0.42;
   oL.connect(gL); gL.connect(mg,0,0);
 
-  // Right: 260 Hz (250 + 10 Hz beat) — updated by sweep engine
   const oR = ctx.createOscillator(); oR.type='sine'; oR.frequency.value=260;
   const gR = ctx.createGain(); gR.gain.value=0.42;
   oR.connect(gR); gR.connect(mg,0,1);
 
   const envGain = ctx.createGain();
-  envGain.gain.setValueAtTime(0, ctx.currentTime);
-  envGain.gain.linearRampToValueAtTime(1, ctx.currentTime+5);
+  envGain.gain.setValueAtTime(0, startTime);
+  envGain.gain.linearRampToValueAtTime(1, startTime + 5);
   mg.connect(envGain); envGain.connect(master);
 
-  oL.start(); oR.start();
+  oL.start(startTime); oR.start(startTime);
   nodes.push(oL,oR,gL,gR,mg,envGain);
 
-  return { ctx, nodes, oR };
+  return { ctx, nodes, oR, startTime };
 }
 
 function createThetaAudio() {
-  // Theta mode: steady 6 Hz binaural beat for stress relief / parasympathetic activation
-  // Carrier: 300 Hz L / 306 Hz R = 6 Hz beat
-  // 300 Hz carrier is more comfortable than 200 Hz for extended sessions —
-  // sits in the sweet spot where the carrier tone is perceptible but not harsh
-  // Pink noise bed slightly louder to mask carrier edge artifacts
+  // Theta mode: stress relief via parasympathetic activation
+  // DUAL ENTRAINMENT — two mechanisms at 6 Hz simultaneously:
+  //   1. Binaural beat (300/306 Hz) — internal beat perceived via inter-aural phase difference
+  //   2. Isochronic layer — pink noise AM-gated at 6 Hz (square LFO)
+  //      Research (2023 RCT): combined binaural + isochronic outperforms either alone
+  //      for reducing stress, anxiety, and cortisol
+  // Pink noise bed provides warmth and masks carrier tone edges
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
   const nodes = [];
-  const master = ctx.createGain(); master.gain.value = 0.6; master.connect(ctx.destination);
+  const master = ctx.createGain(); master.gain.value = 0.55; master.connect(ctx.destination);
+  const startTime = ctx.currentTime + SYNC_DELAY;
 
-  const { sp, g: bgGain } = createContinuousPinkNoise(ctx, 0.10);
+  // ── Pink noise bed (continuous, non-looping) ──
+  const { sp, g: bgGain } = createContinuousPinkNoise(ctx, 0.07);
   bgGain.connect(master);
   nodes.push(sp, bgGain);
   scriptNode = sp;
 
+  // ── Binaural layer: 300 Hz L / 306 Hz R = 6 Hz beat ──
   const mg = ctx.createChannelMerger(2);
-
-  // Left: 300 Hz carrier
   const oL = ctx.createOscillator(); oL.type='sine'; oL.frequency.value=300;
-  const gL = ctx.createGain(); gL.gain.value=0.42;
+  const gL = ctx.createGain(); gL.gain.value=0.38;
   oL.connect(gL); gL.connect(mg,0,0);
-
-  // Right: 306 Hz = 6 Hz binaural beat
   const oR = ctx.createOscillator(); oR.type='sine'; oR.frequency.value=306;
-  const gR = ctx.createGain(); gR.gain.value=0.42;
+  const gR = ctx.createGain(); gR.gain.value=0.38;
   oR.connect(gR); gR.connect(mg,0,1);
-
-  const envGain = ctx.createGain();
-  envGain.gain.setValueAtTime(0, ctx.currentTime);
-  envGain.gain.linearRampToValueAtTime(1, ctx.currentTime+5);
-  mg.connect(envGain); envGain.connect(master);
-
-  oL.start(); oR.start();
-  nodes.push(oL,oR,gL,gR,mg,envGain);
-
-  return { ctx, nodes };
-}
-
-function createBetaAudio() {
-  // Beta/60Hz mode: neuroplasticity / antidepressant
-  // Light: 60 Hz flicker (audio-clock synced, phase-locked to LFO below)
-  //
-  // Audio layer 1: 60 Hz isochronic AM on 200 Hz carrier
-  //   — near-square modulation (sine LFO depth 0.45 on DC 0.5 = swings 0.05→0.95)
-  //   — LFO started at time=0 so its phase matches the flash engine
-  //   — This is the primary entrainment mechanism matching the research protocol
-  //
-  // Audio layer 2: 40 Hz complementary binaural (300/340 Hz)
-  //   — 60 Hz binaural beats exceed auditory fusion limit (~30 Hz) and are imperceptible
-  //   — 40 Hz binaural adds a secondary gamma layer that is perceptible and complementary
-  //   — Combined 60 Hz isochronic + 40 Hz binaural = broader gamma band stimulation
-  //
-  // Audio layer 3: quiet pink noise bed for warmth
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  const nodes = [];
-  const master = ctx.createGain(); master.gain.value = 0.5; master.connect(ctx.destination);
-
-  // ── Layer 1: Pink noise bed ──
-  const { sp, g: bgGain } = createContinuousPinkNoise(ctx, 0.05);
-  const noiseSplit = ctx.createChannelSplitter(1);
-  const noiseMerge = ctx.createChannelMerger(2);
-  bgGain.connect(noiseSplit);
-  noiseSplit.connect(noiseMerge, 0, 0);
-  noiseSplit.connect(noiseMerge, 0, 1);
-  noiseMerge.connect(master);
-  nodes.push(sp, bgGain, noiseSplit, noiseMerge);
-  scriptNode = sp;
-
-  // ── Layer 2: 60 Hz isochronic AM carrier ──
-  // Square LFO = hard on/off gating, matching research device stimulus pattern
-  // DC offset 0.50, depth 0.45 → gain swings 0.05 (near-silent) to 0.95 (near-peak)
-  const carrier = ctx.createOscillator();
-  carrier.type = 'sine'; carrier.frequency.value = 200;
-
-  const lfo = ctx.createOscillator();
-  lfo.type = 'square'; lfo.frequency.value = 60; // square wave = hard isochronic gating
-  const lfoScale = ctx.createGain(); lfoScale.gain.value = 0.45;
-  const carrierEnv = ctx.createGain(); carrierEnv.gain.value = 0.50;
-  lfo.connect(lfoScale); lfoScale.connect(carrierEnv.gain);
-  carrier.connect(carrierEnv);
-
-  const cSplit = ctx.createChannelSplitter(1);
-  const cMerge = ctx.createChannelMerger(2);
-  carrierEnv.connect(cSplit);
-  cSplit.connect(cMerge, 0, 0);
-  cSplit.connect(cMerge, 0, 1);
-  cMerge.connect(master);
-  nodes.push(carrier, lfo, lfoScale, carrierEnv, cSplit, cMerge);
-
-  // ── Layer 3: 40 Hz complementary binaural (300 Hz L / 340 Hz R) ──
-  const binMerge = ctx.createChannelMerger(2);
-  const oL = ctx.createOscillator(); oL.type = 'sine'; oL.frequency.value = 300;
-  const gL = ctx.createGain(); gL.gain.value = 0.16;
-  oL.connect(gL); gL.connect(binMerge, 0, 0);
-  const oR = ctx.createOscillator(); oR.type = 'sine'; oR.frequency.value = 340;
-  const gR = ctx.createGain(); gR.gain.value = 0.16;
-  oR.connect(gR); gR.connect(binMerge, 0, 1);
   const binEnv = ctx.createGain();
-  binEnv.gain.setValueAtTime(0, ctx.currentTime);
-  binEnv.gain.linearRampToValueAtTime(1, ctx.currentTime + 4);
-  binMerge.connect(binEnv); binEnv.connect(master);
-  nodes.push(oL, oR, gL, gR, binMerge, binEnv);
+  binEnv.gain.setValueAtTime(0, startTime);
+  binEnv.gain.linearRampToValueAtTime(1, startTime+5);
+  mg.connect(binEnv); binEnv.connect(master);
+  oL.start(startTime); oR.start(startTime);
+  nodes.push(oL,oR,gL,gR,mg,binEnv);
 
-  // Phase-lock: start LFO and carrier at time=0 so phase(t) = (ctx.currentTime * 60) % 1
-  // Flash engine uses same formula — they are phase-identical
-  carrier.start(); lfo.start(); oL.start(); oR.start();
+  // ── Isochronic layer: pink noise gated at 6 Hz via square LFO ──
+  // Lower gain than binaural so it's complementary, not dominant
+  // Slightly different carrier character (noise vs pure tone) for richer combined stimulus
+  const { sp: sp2, g: isoGain } = createContinuousPinkNoise(ctx, 0.28);
+  isoGain.gain.value = 0.28; // base DC offset
+  const isoLfo = ctx.createOscillator(); isoLfo.type='square'; isoLfo.frequency.value=6;
+  const isoDepth = ctx.createGain(); isoDepth.gain.value=0.28; // LFO swings gain 0→0.56
+  isoLfo.connect(isoDepth); isoDepth.connect(isoGain.gain);
+  const isoEnv = ctx.createGain();
+  isoEnv.gain.setValueAtTime(0, startTime);
+  isoEnv.gain.linearRampToValueAtTime(1, startTime+5);
+  isoGain.connect(isoEnv); isoEnv.connect(master);
+  isoLfo.start(startTime); // phase-lock isochronic to scheduled start
+  nodes.push(sp2, isoGain, isoLfo, isoDepth, isoEnv);
 
-  // Fade in master over 4s
-  master.gain.setValueAtTime(0, ctx.currentTime);
-  master.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 4);
-
-  return { ctx, nodes };
+  return { ctx, nodes, startTime };
 }
 
 function stopAudio() {
@@ -790,29 +673,49 @@ function stopAudio() {
 
 // ═══════════════════════════════════════════════════════
 //  FLASH ENGINE
-//  CSS animations run on the browser compositor thread — no JS jitter.
-//  steps(1,end) produces a true hard on/off square wave.
-//  Each frequency has its own precisely timed @keyframes rule.
-//  For Alpha sweep, we swap CSS classes as the stage changes.
+//  CSS animations on compositor thread — steps(2,start) = hard square wave.
+//
+//  PHASE LOCK MECHANISM:
+//  All oscillators are scheduled to start at ctx.currentTime + SYNC_DELAY (100ms).
+//  When startFlash() is called, it computes how many milliseconds until that
+//  scheduled start, then sets animation-delay = -elapsed_ms so the CSS animation
+//  begins at the same phase as the audio oscillator.
+//
+//  Result: light and sound start their first cycle within one compositor frame
+//  of each other (~1ms at 120Hz), which is imperceptible and as close to true
+//  phase lock as a browser can achieve.
 // ═══════════════════════════════════════════════════════
 const flashEl = document.getElementById('flash');
-const FLICKER_CLASSES = ['flicker-60','flicker-40','flicker-10','flicker-6','flicker-3'];
+const FLICKER_CLASSES = ['flicker-40','flicker-10','flicker-6','flicker-3'];
+const SYNC_DELAY = 0.1; // seconds — audio oscillators start this far in the future
 
-function startFlash() {
-  setFlickerFreq(currentFlashFreq);
+// Called with the AudioContext and the scheduled start time of the oscillators
+function startFlash(ctx, scheduledStartTime) {
+  const map = { 40:'flicker-40', 10:'flicker-10', 6:'flicker-6', 3:'flicker-3' };
+  const cls = map[currentFlashFreq];
+  if (!cls) return;
+
+  // Compute negative delay so CSS animation phase matches audio phase at scheduledStartTime
+  // When scheduledStartTime arrives, elapsed = 0 → animation is at frame 0 = in sync
+  const msUntilStart = (scheduledStartTime - ctx.currentTime) * 1000;
+  flashEl.style.animationDelay = msUntilStart > 0 ? '0ms' : `${msUntilStart}ms`;
+
+  flashEl.classList.remove(...FLICKER_CLASSES);
+  flashEl.classList.add(cls);
 }
 
 function setFlickerFreq(hz) {
-  // Remove all flicker classes
+  // Used during Alpha sweep — swaps class, resets delay to 0 (sync not critical mid-sweep)
   flashEl.classList.remove(...FLICKER_CLASSES);
-  // Map hz value to CSS class
-  const map = { 60:'flicker-60', 40:'flicker-40', 10:'flicker-10', 6:'flicker-6', 3:'flicker-3' };
+  flashEl.style.animationDelay = '0ms';
+  const map = { 40:'flicker-40', 10:'flicker-10', 6:'flicker-6', 3:'flicker-3' };
   const cls = map[hz];
   if (cls) flashEl.classList.add(cls);
 }
 
 function stopFlash() {
   flashEl.classList.remove(...FLICKER_CLASSES);
+  flashEl.style.animationDelay = '0ms';
   flashEl.style.opacity = '0';
 }
 
@@ -899,52 +802,18 @@ function updateTimer() {
 }
 
 // ═══════════════════════════════════════════════════════
-//  FRAME RATE CHECKER
-//  Measures actual rAF delivery rate over 20 frames.
-//  Used only for Beta (60 Hz) to warn if display < 100 Hz.
-//  At 60 Hz display: ~60 fps measured → warn
-//  At 90 Hz display: ~90 fps → warn
-//  At 120 Hz display: ~120 fps → clear, Beta will work
-// ═══════════════════════════════════════════════════════
-function checkFrameRate(callback) {
-  const samples = [];
-  let last = null;
-  let count = 0;
-  const FRAMES = 30; // sample 30 frames (~250ms at 120Hz)
-
-  function tick(ts) {
-    if (last !== null) {
-      samples.push(ts - last);
-    }
-    last = ts;
-    count++;
-    if (count < FRAMES) {
-      requestAnimationFrame(tick);
-    } else {
-      const avgMs = samples.reduce((a,b) => a+b, 0) / samples.length;
-      const fps = Math.round(1000 / avgMs);
-      callback(fps);
-    }
-  }
-  requestAnimationFrame(tick);
-}
-
-// ═══════════════════════════════════════════════════════
 //  SESSION CONTROL
 // ═══════════════════════════════════════════════════════
 async function startSession() {
   try { if('wakeLock' in navigator) window._wakeLock = await navigator.wakeLock.request('screen'); } catch(e){}
 
-  // Reset pink noise state so each session is fresh
   Object.assign(pinkState, {b0:0,b1:0,b2:0,b3:0,b4:0,b5:0,b6:0});
 
   const isAlpha = appMode === 'alpha';
   const isTheta = appMode === 'theta';
-  const isBeta  = appMode === 'beta';
 
   if (isAlpha) sessionDuration = alphaDurationMin * 60;
   else if (isTheta) sessionDuration = thetaDurationMin * 60;
-  else if (isBeta) sessionDuration = betaDurationMin * 60;
   else sessionDuration = durationMin * 60;
   sessionStart = Date.now();
 
@@ -957,10 +826,6 @@ async function startSession() {
     audioResult = createThetaAudio();
     currentFlashFreq = 6;
     alphaOscR = null;
-  } else if (isBeta) {
-    audioResult = createBetaAudio();
-    currentFlashFreq = 60; // true 60 Hz — reliable on 120 Hz display (OnePlus 12)
-    alphaOscR = null;
   } else {
     audioResult = createGammaAudio(audioMode);
     currentFlashFreq = 40;
@@ -968,14 +833,16 @@ async function startSession() {
   }
   audioCtx = audioResult.ctx;
   sessionNodes = audioResult.nodes;
+  const scheduledStartTime = audioResult.startTime;
 
-  // Style session screen for mode
   const ring = document.getElementById('ring-progress');
   const pulse = document.getElementById('hz-pulse');
   const sweep = document.getElementById('sweep-label');
-  ring.classList.remove('alpha-ring','theta-ring','beta-ring');
-  pulse.classList.remove('alpha-pulse','theta-pulse','beta-pulse');
+  const fixation = document.getElementById('fixation');
+  ring.classList.remove('alpha-ring','theta-ring');
+  pulse.classList.remove('alpha-pulse','theta-pulse');
   sweep.style.display = 'none';
+  fixation.classList.remove('active'); // hidden by default
 
   const inner = document.getElementById('overlay-inner');
 
@@ -990,41 +857,25 @@ async function startSession() {
     inner.style.borderColor = 'rgba(155,126,181,0.4)';
     pulse.textContent = '● 6 Hz · Theta active';
     document.getElementById('session-mode-label').textContent = 'Theta · 6 Hz · Stress Relief';
-  } else if (isBeta) {
-    ring.classList.add('beta-ring');
-    pulse.classList.add('beta-pulse');
-    inner.style.borderColor = 'rgba(126,181,138,0.4)';
-    pulse.textContent = '● 60 Hz · Beta active';
-    document.getElementById('session-mode-label').textContent = 'Beta · 60 Hz · Neuroplasticity';
   } else {
+    // Gamma — show fixation cross
+    fixation.classList.add('active');
     inner.style.borderColor = 'rgba(200,169,110,0.4)';
     pulse.textContent = '● 40 Hz active';
     document.getElementById('session-mode-label').textContent =
       {click:'40 Hz · Click Train (MIT)',binaural:'40 Hz · Binaural Beats',both:'40 Hz · Click + Binaural'}[audioMode];
   }
 
-  const dispMin = isAlpha ? alphaDurationMin : isTheta ? thetaDurationMin : isBeta ? betaDurationMin : durationMin;
+  const dispMin = isAlpha ? alphaDurationMin : isTheta ? thetaDurationMin : durationMin;
   ringEl.style.strokeDasharray = circumference;
   ringEl.style.strokeDashoffset = 0;
   timerEl.textContent = String(dispMin).padStart(2,'0') + ':00';
 
   showScreen('session');
-  startFlash();
+  startFlash(audioCtx, scheduledStartTime);
   timerInterval = setInterval(updateTimer, 500);
 
   if (isAlpha) startAlphaSweep(sessionDuration);
-
-  // Frame rate check — Beta only. Warn if display < 100 Hz (can't deliver true 60 Hz flicker)
-  const fpsWarn = document.getElementById('fps-warn');
-  fpsWarn.style.display = 'none';
-  if (isBeta) {
-    checkFrameRate(fps => {
-      if (fps < 100) {
-        fpsWarn.textContent = `⚠ Display at ~${fps} Hz — Beta flicker may be irregular. Enable 120 Hz in Settings → Display → Screen refresh rate.`;
-        fpsWarn.style.display = 'block';
-      }
-    });
-  }
 }
 
 function stopSession() { cleanup(); showScreen('mode'); }
@@ -1033,11 +884,10 @@ function finishSession() {
   cleanup();
   const isAlpha = appMode === 'alpha';
   const isTheta = appMode === 'theta';
-  const isBeta  = appMode === 'beta';
   const mark = document.getElementById('done-mark');
   const title = document.getElementById('done-title');
-  mark.className  = 'done-mark'  + (isAlpha ? ' alpha-mark'  : isTheta ? ' theta-mark'  : isBeta ? ' beta-mark'  : '');
-  title.className = 'done-title' + (isAlpha ? ' alpha-done-title' : isTheta ? ' theta-done-title' : isBeta ? ' beta-done-title' : '');
+  mark.className  = 'done-mark'  + (isAlpha ? ' alpha-mark'  : isTheta ? ' theta-mark'  : '');
+  title.className = 'done-title' + (isAlpha ? ' alpha-done-title' : isTheta ? ' theta-done-title' : '');
 
   const gammaDoneTexts = {
     10:'A brief entrainment. Consider extending to 30–60 minutes for deeper effect.',
@@ -1054,15 +904,9 @@ function finishSession() {
     20:'Twenty minutes — sufficient for measurable cortisol reduction. Well done.',
     30:'Thirty minutes of sustained theta. Maximum stress-buffering benefit achieved.'
   };
-  const betaDoneTexts = {
-    15:'Fifteen minutes of 60 Hz entrainment. Continue daily for cumulative neuroplastic effect.',
-    30:'Thirty minutes — the studied protocol dose. Repeat daily, 5 days/week for 3 weeks.',
-    60:'One full hour of 60 Hz stimulation. The neuroplastic window is open. Rest well.'
-  };
   document.getElementById('done-text').textContent =
     isAlpha ? (alphaDoneTexts[alphaDurationMin] || 'Session complete.') :
     isTheta ? (thetaDoneTexts[thetaDurationMin] || 'Session complete.') :
-    isBeta  ? (betaDoneTexts[betaDurationMin]   || 'Session complete.') :
     (gammaDoneTexts[durationMin] || 'Session complete.');
   showScreen('done');
 }
@@ -1072,6 +916,7 @@ function cleanup() {
   clearInterval(sweepInterval); sweepInterval = null;
   stopAudio();
   stopFlash();
+  document.getElementById('fixation').classList.remove('active');
   hideOverlay();
   alphaOscR = null;
   if (window._wakeLock) { try{window._wakeLock.release();}catch(e){} window._wakeLock=null; }
@@ -1102,8 +947,16 @@ document.getElementById('screen-session').addEventListener('click', e => {
   if (audioCtx) showOverlay();
 });
 document.addEventListener('visibilitychange', async () => {
-  if (document.visibilityState==='visible' && audioCtx && 'wakeLock' in navigator)
-    try { window._wakeLock = await navigator.wakeLock.request('screen'); } catch(e){}
+  if (document.visibilityState === 'visible') {
+    // Resume AudioContext if Android battery management suspended it
+    if (audioCtx && audioCtx.state === 'suspended') {
+      try { await audioCtx.resume(); } catch(e){}
+    }
+    // Re-acquire wake lock
+    if (audioCtx && 'wakeLock' in navigator) {
+      try { window._wakeLock = await navigator.wakeLock.request('screen'); } catch(e){}
+    }
+  }
 });
 </script>
 </body>
